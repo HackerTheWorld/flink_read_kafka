@@ -1,6 +1,0 @@
-flinksummary\vo\KafkaMessageVo.class
-flinksummary\common\ProductFlatMap.class
-flinksummary\common\ProductKeySelector.class
-flinksummary\common\ProductReduce.class
-flinksummary\StartFlink.class
-flinksummary\common\ProductRichSink.class

@@ -6,6 +6,7 @@ import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -82,7 +83,7 @@ public class StartFlink {
         //滑动窗口
         WindowedStream<KafkaMessageVo,String,TimeWindow> window = keyStream.window(SlidingProcessingTimeWindows.of(Time.seconds(20), Time.seconds(1)));
         //增量函数 每次收到信息
-        DataStream<KafkaMessageVo> outputStream = window.aggregate(new ProductAggregate());
+        SingleOutputStreamOperator<KafkaMessageVo> outputStream = window.aggregate(new ProductAggregate());
         /**
          * 全窗口函数 达到范围执行 windowFunction
          * window.apply(function, resultType)

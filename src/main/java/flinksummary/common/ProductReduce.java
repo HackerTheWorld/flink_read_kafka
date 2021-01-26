@@ -4,6 +4,7 @@ import org.apache.flink.api.common.functions.ReduceFunction;
 
 import flinksummary.vo.KafkaMessageVo;
 
+//合并记录方法
 public class ProductReduce implements ReduceFunction<KafkaMessageVo> {
 
     /**

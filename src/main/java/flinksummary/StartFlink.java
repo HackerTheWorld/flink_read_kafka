@@ -2,14 +2,21 @@ package flinksummary;
 
 import java.util.Properties;
 
+import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
+import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
+import flinksummary.common.ProductAggregate;
 import flinksummary.common.ProductFlatMap;
 import flinksummary.common.ProductKeySelector;
 import flinksummary.common.ProductReduce;
@@ -27,6 +34,9 @@ public class StartFlink {
         pointConfig.setMinPauseBetweenCheckpoints(60 * 1000);
         //设置检查点的并行度
         pointConfig.setMaxConcurrentCheckpoints(4);
+
+        // ExecutionConfig conf = env.getConfig();
+
         // Kafka参数
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", "localhost:9092");
@@ -68,7 +78,11 @@ public class StartFlink {
         DataStream<KafkaMessageVo> jsonCollectot = stream.flatMap(new ProductFlatMap());
         // 根据指定列分组
         KeyedStream<KafkaMessageVo,String> keyStream = jsonCollectot.keyBy(new ProductKeySelector());
-        DataStream<KafkaMessageVo> outputStream = keyStream.reduce(new ProductReduce());
+        //按时间设置分割信息
+        //滑动窗口
+        WindowedStream<KafkaMessageVo,String,TimeWindow> window = keyStream.window(SlidingProcessingTimeWindows.of(Time.seconds(20), Time.seconds(1)));
+        
+        DataStream<KafkaMessageVo> outputStream = window.aggregate(new ProductAggregate());
         outputStream.addSink(new ProductRichSink());
 
         try {

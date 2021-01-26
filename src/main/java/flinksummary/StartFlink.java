@@ -81,14 +81,15 @@ public class StartFlink {
         //按时间设置分割信息
         //滑动窗口
         WindowedStream<KafkaMessageVo,String,TimeWindow> window = keyStream.window(SlidingProcessingTimeWindows.of(Time.seconds(20), Time.seconds(1)));
-        window.trigger(trigger);
         //增量函数 每次收到信息
         DataStream<KafkaMessageVo> outputStream = window.aggregate(new ProductAggregate());
         /**
          * 全窗口函数 达到范围执行 windowFunction
          * window.apply(function, resultType)
+         * 有纰漏数据获取
+         * window.sideOutputLateData(outputTag)
          * */
-
+        
         outputStream.addSink(new ProductRichSink());
 
         try {

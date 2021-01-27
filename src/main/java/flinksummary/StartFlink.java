@@ -3,6 +3,7 @@ package flinksummary;
 import java.util.Properties;
 
 import org.apache.flink.api.common.ExecutionConfig;
+import org.apache.flink.api.common.eventtime.Watermark;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
@@ -10,6 +11,8 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
+import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -22,6 +25,7 @@ import flinksummary.common.ProductFlatMap;
 import flinksummary.common.ProductKeySelector;
 import flinksummary.common.ProductReduce;
 import flinksummary.common.ProductRichSink;
+import flinksummary.common.ProductWaterMark;
 import flinksummary.vo.KafkaMessageVo;
 
 public class StartFlink {
@@ -77,17 +81,22 @@ public class StartFlink {
 
         // 将数据流转中的String换为实体类
         DataStream<KafkaMessageVo> jsonCollectot = stream.flatMap(new ProductFlatMap());
+        SingleOutputStreamOperator<KafkaMessageVo> assOperator = jsonCollectot.assignTimestampsAndWatermarks(new ProductWaterMark());
         // 根据指定列分组
-        KeyedStream<KafkaMessageVo,String> keyStream = jsonCollectot.keyBy(new ProductKeySelector());
+        KeyedStream<KafkaMessageVo,String> keyStream = assOperator.keyBy(new ProductKeySelector());
         //按时间设置分割信息
         //滑动窗口
-        WindowedStream<KafkaMessageVo,String,TimeWindow> window = keyStream.window(SlidingProcessingTimeWindows.of(Time.seconds(20), Time.seconds(1)));
+        WindowedStream<KafkaMessageVo,String,TimeWindow> window = keyStream.window(SlidingEventTimeWindows.of(Time.seconds(20), Time.seconds(1)));
+        //获取纰漏数据，纰漏数据为批处理方式
+        //window.sideOutputLateData(outputTag);
+        
+        //定义watermark    
         //增量函数 每次收到信息
         SingleOutputStreamOperator<KafkaMessageVo> outputStream = window.aggregate(new ProductAggregate());
         /**
          * 全窗口函数 达到范围执行 windowFunction
          * window.apply(function, resultType)
-         * 有纰漏数据获取
+         * 有纰漏数据获取 
          * window.sideOutputLateData(outputTag)
          * */
         

@@ -5,6 +5,7 @@ public class KafkaMessageVo{
     private String jsonId;
     private String mouldNoSys;
     private int num;
+    private String testTime;
 
     public String getJsonId() {
         return jsonId;
@@ -28,6 +29,14 @@ public class KafkaMessageVo{
 
     public void setNum(int num) {
         this.num = num;
+    }
+
+    public String getTestTime() {
+        return testTime;
+    }
+
+    public void setTestTime(String testTime) {
+        this.testTime = testTime;
     }
 
     

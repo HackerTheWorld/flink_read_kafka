@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.eventtime.Watermark;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
@@ -25,6 +26,7 @@ import flinksummary.common.ProductFlatMap;
 import flinksummary.common.ProductKeySelector;
 import flinksummary.common.ProductReduce;
 import flinksummary.common.ProductRichSink;
+import flinksummary.common.ProductTimestampAssignerSupplier;
 import flinksummary.common.ProductWaterMark;
 import flinksummary.vo.KafkaMessageVo;
 
@@ -86,10 +88,12 @@ public class StartFlink {
         *    .withTimestampAssigner(new ProductTimestampAssignerSupplier());
         */
         
+        WatermarkStrategy<KafkaMessageVo> water =  new ProductWaterMark();
+        water.withTimestampAssigner(new ProductTimestampAssignerSupplier());
         
         // 将数据流转中的String换为实体类
         DataStream<KafkaMessageVo> jsonCollectot = stream.flatMap(new ProductFlatMap());
-        SingleOutputStreamOperator<KafkaMessageVo> assOperator = jsonCollectot.assignTimestampsAndWatermarks(new ProductWaterMark());
+        SingleOutputStreamOperator<KafkaMessageVo> assOperator = jsonCollectot.assignTimestampsAndWatermarks(water);
         // 根据指定列分组
         KeyedStream<KafkaMessageVo,String> keyStream = assOperator.keyBy(new ProductKeySelector());
         //按时间设置分割信息

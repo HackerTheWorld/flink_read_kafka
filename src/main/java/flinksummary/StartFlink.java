@@ -83,11 +83,7 @@ public class StartFlink {
         * 定义水位线
         * WatermarkStrategy<RabbitMqVo> water = WatermarkStrategy
         *    .<RabbitMqVo>forBoundedOutOfOrderness(Duration.ofSeconds(2))
-        *    .withTimestampAssigner((event, timestamp)->{
-        *       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd HH:MM:ss");
-        *       LocalDateTime time = LocalDateTime.parse(event.getTestTime(), formatter);
-        *       return time.toInstant(ZoneOffset.of("+8")).toEpochMilli();
-        *    });
+        *    .withTimestampAssigner(new ProductTimestampAssignerSupplier());
         */
         
         

@@ -78,7 +78,19 @@ public class StartFlink {
         // }
         // }).returns(Types.TUPLE(Types.STRING,
         // Types.INT)).keyBy(0).timeWindow(Time.seconds(5)).sum(1);
-
+        
+        /**
+        * 定义水位线
+        * WatermarkStrategy<RabbitMqVo> water = WatermarkStrategy
+        *    .<RabbitMqVo>forBoundedOutOfOrderness(Duration.ofSeconds(2))
+        *    .withTimestampAssigner((event, timestamp)->{
+        *       DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd HH:MM:ss");
+        *       LocalDateTime time = LocalDateTime.parse(event.getTestTime(), formatter);
+        *       return time.toInstant(ZoneOffset.of("+8")).toEpochMilli();
+        *    });
+        */
+        
+        
         // 将数据流转中的String换为实体类
         DataStream<KafkaMessageVo> jsonCollectot = stream.flatMap(new ProductFlatMap());
         SingleOutputStreamOperator<KafkaMessageVo> assOperator = jsonCollectot.assignTimestampsAndWatermarks(new ProductWaterMark());

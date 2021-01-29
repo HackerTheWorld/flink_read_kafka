@@ -107,10 +107,10 @@ public class StartFlink {
 
         //测流分流输出
         OutputTag<SideOutput> outputTag = new OutputTag<SideOutput>("c",TypeInformation.of(SideOutput.class));
-        SingleOutputStreamOperator<KafkaMessageVo> process = flatStream.process(new ProductProcess());
+        SingleOutputStreamOperator<KafkaMessageVo> process = jsonCollectot.process(new ProductProcess());
         process.getSideOutput(outputTag).print();
         
-        SingleOutputStreamOperator<KafkaMessageVo> assOperator = jsonCollectot.assignTimestampsAndWatermarks(water);
+        SingleOutputStreamOperator<KafkaMessageVo> assOperator = process.assignTimestampsAndWatermarks(water);
         // 根据指定列分组
         KeyedStream<KafkaMessageVo,String> keyStream = assOperator.keyBy(new ProductKeySelector());
         //按时间设置分割信息

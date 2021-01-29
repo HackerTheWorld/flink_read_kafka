@@ -29,6 +29,7 @@ import flinksummary.common.ProductRichSink;
 import flinksummary.common.ProductTimestampAssignerSupplier;
 import flinksummary.common.ProductWaterMark;
 import flinksummary.vo.KafkaMessageVo;
+import flinksummary.vo.SideOutput;
 
 public class StartFlink {
 

@@ -93,6 +93,23 @@ public class StartFlink {
         
         // 将数据流转中的String换为实体类
         DataStream<KafkaMessageVo> jsonCollectot = stream.flatMap(new ProductFlatMap());
+        
+        /** 
+         * 自定义的分流
+         * OutputTag<KafkaMessageVo> middleware = new OutputTag<KafkaMessageVo>(分流的类型|"side-output-200~500"定义的范围);
+         * 进行判断将不同种类型的数据存到不同的 OutputTag 中去。
+         * ProcessFunction
+         * KeyedProcessFunction
+         * CoProcessFunction
+         * ProcessWindowFunction
+         * ProcessAllWindowFunction
+         */ 
+
+        //测流分流输出
+        OutputTag<SideOutput> outputTag = new OutputTag<SideOutput>("c",TypeInformation.of(SideOutput.class));
+        SingleOutputStreamOperator<KafkaMessageVo> process = flatStream.process(new ProductProcess());
+        process.getSideOutput(outputTag).print();
+        
         SingleOutputStreamOperator<KafkaMessageVo> assOperator = jsonCollectot.assignTimestampsAndWatermarks(water);
         // 根据指定列分组
         KeyedStream<KafkaMessageVo,String> keyStream = assOperator.keyBy(new ProductKeySelector());

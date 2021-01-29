@@ -36,7 +36,8 @@ class ProductWatermarkGenerator implements WatermarkGenerator<KafkaMessageVo> {
     public void onEvent(KafkaMessageVo event, long eventTimestamp, WatermarkOutput output) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd HH:MM:ss");
         LocalDateTime time = LocalDateTime.parse(event.getTestTime(), formatter);
-        maxTimestamp = Math.max(maxTimestamp, time.toEpochSecond(ZoneOffset.of("+8")));
+        long timeSecond = time.toInstant(ZoneOffset.of("+8")).toEpochMilli();
+        maxTimestamp = Math.max(maxTimestamp, timeSecond);
         output.emitWatermark(new Watermark(maxTimestamp));
     }
 

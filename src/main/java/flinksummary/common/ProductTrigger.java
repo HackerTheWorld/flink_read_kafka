@@ -28,29 +28,33 @@ public class ProductTrigger extends Trigger<KafkaMessageVo, TimeWindow> {
     @Override
     public TriggerResult onElement(KafkaMessageVo element, long arg1, TimeWindow window, TriggerContext ctx)
             throws Exception {
-                ctx.registerProcessingTimeTimer(window.maxTimestamp());
-                System.out.println("onElement ::"+element.getMouldNoSys());
+                System.out.println("onElement ::"+element.getMouldNoSys()+"-timestamp::"+timestamp+"-getCurrentWatermark::"+ctx.getCurrentWatermark());
                 count = count + 1;
                 if(count == 4){
                     count = 0;
-                    System.out.println("onElement ::触发计算");
-                    return TriggerResult.FIRE_AND_PURGE;
+                    return TriggerResult.CONTINUE;
                 }
-         return TriggerResult.CONTINUE;
+                if(window.maxTimestamp()<=ctx.getCurrentWatermark()){
+                    System.out.println("onElement 达到::"+count);
+                    return TriggerResult.FIRE;
+                }else{
+                    ctx.registerEventTimeTimer(window.maxTimestamp());
+                    return TriggerResult.CONTINUE;
+                }
     }
 
     //方法会在一个EventTime定时器触发的时候调用
     @Override
     public TriggerResult onEventTime(long arg0, TimeWindow arg1, TriggerContext arg2) throws Exception {
         //在定义为evenTime时设置为FIRE
-        return TriggerResult.CONTINUE;
+        return TriggerResult.FIRE;
     }
 
     //方法会在一个ProcessingTime定时器触发的时候调用
     @Override
     public TriggerResult onProcessingTime(long arg0, TimeWindow arg1, TriggerContext arg2) throws Exception {
         //在定义为Processing时设置为FIRE
-        return TriggerResult.FIRE;
+        return TriggerResult.CONTINUE;
     }
     
 }

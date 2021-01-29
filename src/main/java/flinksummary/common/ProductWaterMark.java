@@ -44,7 +44,6 @@ class ProductWatermarkGenerator implements WatermarkGenerator<KafkaMessageVo> {
     //周期性生成水印的方法。这个水印的生成周期可以这样设置：env.getConfig().setAutoWatermarkInterval(5000L);
     @Override
     public void onPeriodicEmit(WatermarkOutput output) {
-        // TODO Auto-generated method stub
 
     }
 

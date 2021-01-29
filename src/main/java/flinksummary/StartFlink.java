@@ -2,29 +2,26 @@ package flinksummary;
 
 import java.util.Properties;
 
-import org.apache.flink.api.common.ExecutionConfig;
-import org.apache.flink.api.common.eventtime.Watermark;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+import org.apache.flink.util.OutputTag;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import flinksummary.common.ProductAggregate;
 import flinksummary.common.ProductFlatMap;
 import flinksummary.common.ProductKeySelector;
-import flinksummary.common.ProductReduce;
+import flinksummary.common.ProductProcess;
 import flinksummary.common.ProductRichSink;
 import flinksummary.common.ProductTimestampAssignerSupplier;
 import flinksummary.common.ProductWaterMark;

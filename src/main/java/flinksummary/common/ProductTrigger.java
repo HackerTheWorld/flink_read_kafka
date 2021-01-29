@@ -26,7 +26,7 @@ public class ProductTrigger extends Trigger<KafkaMessageVo, TimeWindow> {
 
     //方法会在窗口清除的时候调用
     @Override
-    public TriggerResult onElement(KafkaMessageVo element, long arg1, TimeWindow window, TriggerContext ctx)
+    public TriggerResult onElement(KafkaMessageVo element, long timestamp, TimeWindow window, TriggerContext ctx)
             throws Exception {
                 System.out.println("onElement ::"+element.getMouldNoSys()+"-timestamp::"+timestamp+"-getCurrentWatermark::"+ctx.getCurrentWatermark());
                 count = count + 1;

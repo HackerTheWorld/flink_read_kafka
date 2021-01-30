@@ -111,6 +111,8 @@ public class StartFlink {
         SingleOutputStreamOperator<KafkaMessageVo> assOperator = process.assignTimestampsAndWatermarks(water);
         // 根据指定列分组
         KeyedStream<KafkaMessageVo,String> keyStream = assOperator.keyBy(new ProductKeySelector());
+        //设置键控属性
+        keyByStream = keyByStream.map(new ProductRichMap()).keyBy(new ProductKeySelector());
         //按时间设置分割信息
         
         //获取迟到数据

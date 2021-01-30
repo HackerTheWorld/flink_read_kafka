@@ -112,8 +112,15 @@ public class StartFlink {
         // 根据指定列分组
         KeyedStream<KafkaMessageVo,String> keyStream = assOperator.keyBy(new ProductKeySelector());
         //按时间设置分割信息
+        
+        //获取迟到数据
+        OutputTag<KafkaMessageVo> outputLateTag = new OutputTag<KafkaMessageVo>("later",TypeInformation.of(KafkaMessageVo.class));
+        
         //滑动窗口
-        WindowedStream<KafkaMessageVo,String,TimeWindow> window = keyStream.window(SlidingEventTimeWindows.of(Time.seconds(20), Time.seconds(1)));
+        WindowedStream<KafkaMessageVo,String,TimeWindow> window = keyStream
+            .window(SlidingEventTimeWindows.of(Time.seconds(20), Time.seconds(1)))
+            .sideOutputLateData(outputLateTag)
+            .trigger(new ProductTrigger(0));;
         //获取纰漏数据，纰漏数据为批处理方式
         //window.sideOutputLateData(outputTag);
         

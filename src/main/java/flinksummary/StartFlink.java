@@ -22,8 +22,10 @@ import flinksummary.common.ProductAggregate;
 import flinksummary.common.ProductFlatMap;
 import flinksummary.common.ProductKeySelector;
 import flinksummary.common.ProductProcess;
+import flinksummary.common.ProductRichMap;
 import flinksummary.common.ProductRichSink;
 import flinksummary.common.ProductTimestampAssignerSupplier;
+import flinksummary.common.ProductTrigger;
 import flinksummary.common.ProductWaterMark;
 import flinksummary.vo.KafkaMessageVo;
 import flinksummary.vo.SideOutput;
@@ -112,7 +114,7 @@ public class StartFlink {
         // 根据指定列分组
         KeyedStream<KafkaMessageVo,String> keyStream = assOperator.keyBy(new ProductKeySelector());
         //设置键控属性
-        keyByStream = keyByStream.map(new ProductRichMap()).keyBy(new ProductKeySelector());
+        keyStream = keyStream.map(new ProductRichMap()).keyBy(new ProductKeySelector());
         //按时间设置分割信息
         
         //获取迟到数据

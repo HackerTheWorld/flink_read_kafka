@@ -1,9 +1,11 @@
-package nettyNIO.hander.flink;
+package flinksummary.common;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.configuration.Configuration;
+
+import flinksummary.vo.KafkaMessageVo;
 
 /**
  * 定义键控状态用于恢复系统

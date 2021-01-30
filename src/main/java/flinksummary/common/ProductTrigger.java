@@ -21,7 +21,7 @@ public class ProductTrigger extends Trigger<KafkaMessageVo, TimeWindow> {
 
     //方法会在窗口中每进入一条数据的时候调用一次
     @Override
-    public void clear(TimeWindow arg0, TriggerContext arg1) throws Exception {
+    public void clear(TimeWindow window, TriggerContext ctx) throws Exception {
         count = 0;
         System.out.println("时间到了清空");
         ctx.deleteProcessingTimeTimer(window.maxTimestamp());

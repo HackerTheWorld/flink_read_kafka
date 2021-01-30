@@ -16,7 +16,7 @@ public class ProductFlatMap implements FlatMapFunction<String,KafkaMessageVo> {
     public void flatMap(String str, Collector collector) throws Exception {
         KafkaMessageVo kafkaVo = JSON.parseObject(str,KafkaMessageVo.class);
         System.out.println(kafkaVo.getTestTime());
-        collector.collect();
+        collector.collect(kafkaVo);
     }
     
 }

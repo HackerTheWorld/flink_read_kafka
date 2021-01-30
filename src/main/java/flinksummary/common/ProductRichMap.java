@@ -8,7 +8,7 @@ import org.apache.flink.configuration.Configuration;
 /**
  * 定义键控状态用于恢复系统
  */
-public class ProductRichMap extends RichMapFunction<RabbitMqVo,RabbitMqVo>{
+public class ProductRichMap extends RichMapFunction<KafkaMessageVo,KafkaMessageVo>{
 
     /**
      *
@@ -17,7 +17,7 @@ public class ProductRichMap extends RichMapFunction<RabbitMqVo,RabbitMqVo>{
     private ValueState<Integer> val = null;
 
     @Override
-    public RabbitMqVo map(RabbitMqVo in) throws Exception {
+    public KafkaMessageVo map(KafkaMessageVo in) throws Exception {
         int count = val.value() + 1;
         val.update(count);
         return in;

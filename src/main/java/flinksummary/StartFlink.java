@@ -130,8 +130,6 @@ public class StartFlink {
         /**
          * 全窗口函数 达到范围执行 windowFunction
          * window.apply(function, resultType)
-         * 有纰漏数据获取 
-         * window.sideOutputLateData(outputTag)
          * */
         
         outputStream.addSink(new ProductRichSink());

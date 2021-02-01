@@ -61,10 +61,15 @@ public class StartFlink {
          */
         // 消费所有分区数据
         // consumer.subscribe(Arrays.asList("hardware"));
-
+        
+        StartProductWatermarkStrategy water = new StartProductWatermarkStrategy();
+        water.withTimestampAssigner(new StartProductTimestampAssigner());
+        
         // flink创建kafka数据源
         FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<String>("hardware", new SimpleStringSchema(),props);
-        DataStream<String> stream = env.addSource(consumer);
+        DataStream<String> stream = env.addSource(consumer)
+                    //任务执行一开始设置watermark。保证任务的water一致
+            .assignTimestampsAndWatermarks(water);
 
         // Transformations
         // 使用Flink算子对输入流的文本进行操作
@@ -80,16 +85,6 @@ public class StartFlink {
         // }
         // }).returns(Types.TUPLE(Types.STRING,
         // Types.INT)).keyBy(0).timeWindow(Time.seconds(5)).sum(1);
-        
-        /**
-        * 定义水位线
-        * WatermarkStrategy<RabbitMqVo> water = WatermarkStrategy
-        *    .<RabbitMqVo>forBoundedOutOfOrderness(Duration.ofSeconds(2))
-        *    .withTimestampAssigner(new ProductTimestampAssignerSupplier());
-        */
-        
-        WatermarkStrategy<KafkaMessageVo> water =  new ProductWaterMark();
-        water.withTimestampAssigner(new ProductTimestampAssignerSupplier());
         
         // 将数据流转中的String换为实体类
         DataStream<KafkaMessageVo> jsonCollectot = stream.flatMap(new ProductFlatMap());
@@ -110,9 +105,19 @@ public class StartFlink {
         SingleOutputStreamOperator<KafkaMessageVo> process = jsonCollectot.process(new ProductProcess());
         process.getSideOutput(outputTag).print();
         //定义watermark越早越好，最好在stream流进入时候定义
-        SingleOutputStreamOperator<KafkaMessageVo> assOperator = process.assignTimestampsAndWatermarks(water);
+        /**
+        * 定义水位线
+        * WatermarkStrategy<RabbitMqVo> water = WatermarkStrategy
+        *    .<RabbitMqVo>forBoundedOutOfOrderness(Duration.ofSeconds(2))
+        *    .withTimestampAssigner(new ProductTimestampAssignerSupplier());
+        * 
+        * WatermarkStrategy<KafkaMessageVo> water =  new ProductWaterMark();
+        * water.withTimestampAssigner(new ProductTimestampAssignerSupplier());
+        * SingleOutputStreamOperator<KafkaMessageVo> assOperator = process.assignTimestampsAndWatermarks(water);
+        */
+
         // 根据指定列分组
-        KeyedStream<KafkaMessageVo,String> keyStream = assOperator.keyBy(new ProductKeySelector());
+        KeyedStream<KafkaMessageVo,String> keyStream = process.keyBy(new ProductKeySelector());
         //设置键控属性
         keyStream = keyStream.map(new ProductRichMap()).keyBy(new ProductKeySelector());
         //按时间设置分割信息

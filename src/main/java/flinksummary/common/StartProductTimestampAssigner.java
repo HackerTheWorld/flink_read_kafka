@@ -1,4 +1,4 @@
-package nettyNIO.hander.flink;
+package flinksummary.common;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -7,6 +7,8 @@ import java.time.format.DateTimeFormatter;
 import com.alibaba.fastjson.JSON;
 
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
+
+import flinksummary.vo.KafkaMessageVo;
 
 public class StartProductTimestampAssigner implements SerializableTimestampAssigner<String> {
 

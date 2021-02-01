@@ -20,6 +20,12 @@ public class ProductRichMap extends RichMapFunction<KafkaMessageVo,KafkaMessageV
 
     @Override
     public KafkaMessageVo map(KafkaMessageVo in) throws Exception {
+        if(val == null){
+            ValueStateDescriptor<Integer> value = new ValueStateDescriptor<Integer>("keyState",Integer.class);
+        val = getRuntimeContext().getState(value);
+        val.update(0);
+        }
+        
         int count = val.value() + 1;
         val.update(count);
         return in;
@@ -27,9 +33,7 @@ public class ProductRichMap extends RichMapFunction<KafkaMessageVo,KafkaMessageV
 
     @Override
     public void open(Configuration parameters) throws java.lang.Exception {
-        ValueStateDescriptor<Integer> value = new ValueStateDescriptor<Integer>("keyState",Integer.class);
-        val = getRuntimeContext().getState(value);
-        val.update(0);
+
     }
     
 }

@@ -1,4 +1,4 @@
-package nettyNIO.hander.flink;
+package flinksummary.common;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -10,6 +10,8 @@ import org.apache.flink.api.common.eventtime.Watermark;
 import org.apache.flink.api.common.eventtime.WatermarkGenerator;
 import org.apache.flink.api.common.eventtime.WatermarkOutput;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+
+import flinksummary.vo.KafkaMessageVo;
 
 /**
  * 在数据流进入时定义watermark

@@ -37,6 +37,26 @@ public class StartFlink {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.enableCheckpointing(10 * 1000);
         CheckpointConfig pointConfig = env.getCheckpointConfig();
+        
+        /**
+         * 设置内存保存点状态后端，默认内存 
+         * env.setStateBackend(new MemoryStateBackend());
+         */
+
+        /**
+         * 设置文件保存点状态后端,地址可设置本地地址或者hdfs地址 
+         * env.setStateBackend(new FsStateBackend(""));
+         */
+
+        /**
+         * 设置RocksDB保存点状态后端,地址可设置本地地址或者hdfs地址
+         * try {
+         *   env.setStateBackend(new RocksDBStateBackend("", true));
+         * } catch (IOException e1) {
+         *   e1.printStackTrace();
+         * } 
+         */
+        
         // 设置检查点的间隔时间
         pointConfig.setMinPauseBetweenCheckpoints(60 * 1000);
         // 设置检查点的并行度

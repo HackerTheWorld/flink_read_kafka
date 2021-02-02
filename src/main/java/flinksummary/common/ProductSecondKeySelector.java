@@ -2,6 +2,7 @@ package flinksummary.common;
 
 import org.apache.flink.api.java.functions.KeySelector;
 import flinksummary.vo.KafkaMessageVo;
+import flinksummary.vo.KeyVo;
 
 public class ProductSecondKeySelector implements KeySelector<KafkaMessageVo, KeyVo> {
 

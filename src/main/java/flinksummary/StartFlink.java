@@ -35,8 +35,6 @@ public class StartFlink {
     public static void main(String[] args) {
         // 创建Flink执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing(10 * 1000);
-        CheckpointConfig pointConfig = env.getCheckpointConfig();
         
         /**
          * 设置内存保存点状态后端，默认内存 
@@ -56,6 +54,9 @@ public class StartFlink {
          *   e1.printStackTrace();
          * } 
          */
+        
+        env.enableCheckpointing(10 * 1000);
+        CheckpointConfig pointConfig = env.getCheckpointConfig();
         
         // 设置检查点的间隔时间
         pointConfig.setMinPauseBetweenCheckpoints(60 * 1000);

@@ -56,12 +56,15 @@ public class StartFlink {
          */
         
         env.enableCheckpointing(10 * 1000);
-        CheckpointConfig pointConfig = env.getCheckpointConfig();
+        // 取消任务checkpoint不删除
+        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        // 设置checkpoint的 EXACTLY_ONCE 模式
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
         
         // 设置检查点的间隔时间
-        pointConfig.setMinPauseBetweenCheckpoints(60 * 1000);
+        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(60 * 1000);
         // 设置检查点的并行度
-        pointConfig.setMaxConcurrentCheckpoints(4);
+        env.getCheckpointConfig().setMaxConcurrentCheckpoints(4);
 
         // ExecutionConfig conf = env.getConfig();
 
@@ -74,7 +77,8 @@ public class StartFlink {
         props.setProperty("group.id", "product");
         props.put("key.serializer", StringSerializer.class);
         props.put("value.serializer", StringSerializer.class);
-
+        // 【重点】取消kafka管理偏移量，让flink来管理偏移量
+        prop.setProperty("enable.auto.commit","false");
         // Consumer<String, String> consumer = new KafkaConsumer<>(props);
         /**
          * 只消费分区号为2的分区 TopicPartition p = new TopicPartition("test6", 2);h

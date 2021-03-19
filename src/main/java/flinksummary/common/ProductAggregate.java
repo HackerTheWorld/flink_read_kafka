@@ -5,7 +5,7 @@ import org.apache.flink.api.common.functions.AggregateFunction;
 import flinksummary.vo.KafkaMessageVo;
 
 //IN,ACC,OUT
-public class ProductAggregate implements AggregateFunction<KafkaMessageVo,KafkaMessageVo,KafkaMessageVo> {
+public class ProductAggregate implements AggregateFunction<KafkaMessageVo,Integer,Long> {
 
     /**
      *
@@ -14,30 +14,26 @@ public class ProductAggregate implements AggregateFunction<KafkaMessageVo,KafkaM
 
     //IN , ACC
     @Override
-    public KafkaMessageVo add(KafkaMessageVo in, KafkaMessageVo acc) {
-        acc.setMouldNoSys(in.getMouldNoSys());
-        acc.setNum(acc.getNum()+in.getNum());
-        System.out.println("增量 "+acc.getMouldNoSys()+"::"+acc.getNum());
-        return acc;
+    public Integer add(KafkaMessageVo in, Integer acc) {
+        return acc+in.getNum();
     }
 
     //创建时候
     @Override
-    public KafkaMessageVo createAccumulator() {
-        return new KafkaMessageVo();
+    public Integer createAccumulator() {
+        return 0;
     }
 
     //输出结果
     @Override
-    public KafkaMessageVo getResult(KafkaMessageVo out) {
-        System.out.println("窗口清空 "+out.getMouldNoSys()+"::"+out.getNum());
-        return out;
+    public Long getResult(Integer out) {
+        return Long.passLong(String.valueof(out));
     }
 
     //sessionwindow 合并流
     @Override
-    public KafkaMessageVo merge(KafkaMessageVo acc, KafkaMessageVo acc2) {
-        return null;
+    public Integer merge(Integer acc, Integer acc2) {
+        return aac+aac2;
     }
     
 }

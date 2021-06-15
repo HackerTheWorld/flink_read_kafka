@@ -102,3 +102,92 @@ CONTINUE:什么也不做
 FIRE:触发计算
 PURGE:清除窗口中的数据
 FIRE_AND_PURGE:触发计算并清除窗口中的数据
+
+package nettyNIO.hander.flink;
+
+import org.apache.flink.streaming.api.windowing.triggers.Trigger;
+import org.apache.flink.streaming.api.windowing.triggers.TriggerResult;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+
+public class ProductTrigger extends Trigger<RabbitMqVo, TimeWindow> {
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = -2608131055939681286L;
+
+    private int count;
+
+    public ProductTrigger(int count){
+        this.count = count;
+    }
+
+    @Override
+    public TriggerResult onElement(RabbitMqVo element, long timestamp, TimeWindow window, TriggerContext ctx)
+            throws Exception {
+        ctx.registerProcessingTimeTimer(window.maxTimestamp());
+        System.out.println("onElement ::"+element.getMouldNoSys());
+        count = count + 1;
+        if(count == 4){
+            count = 0;
+            System.out.println("onElement ::触发计算");
+            return TriggerResult.FIRE_AND_PURGE;
+        }
+        return TriggerResult.CONTINUE;
+    }
+
+    @Override
+    public TriggerResult onProcessingTime(long time, TimeWindow window, TriggerContext ctx) throws Exception {
+        return TriggerResult.FIRE;
+    }
+
+    @Override
+    public TriggerResult onEventTime(long time, TimeWindow window, TriggerContext ctx) throws Exception {
+        return TriggerResult.CONTINUE;
+    }
+
+    @Override
+    public void clear(TimeWindow window, TriggerContext ctx) throws Exception {
+        count = 0;
+        System.out.println("时间到了清空");
+        ctx.deleteProcessingTimeTimer(window.maxTimestamp());
+    }
+    
+}
+----------------------------------------------------------------
+flink_连接
+## **connect**
+
+`union`虽然可以合并多个数据流，但有一个限制，即多个数据流的数据类型必须相同。`connect`提供了和`union`类似的功能，用来连接两个数据流，它与`union`的区别在于：
+
+1. `connect`只能连接两个数据流，`union`可以连接多个数据流。
+2. `connect`所连接的两个数据流的数据类型可以不一致，`union`所连接的两个数据流的数据类型必须一致。
+3. 两个`DataStream`经过`connect`之后被转化为`ConnectedStreams`，`ConnectedStreams`会对两个流的数据应用不同的处理方法，且双流之间可以共享状态。
+
+`connect`经常被应用在对一个数据流使用另外一个流进行控制处理的场景上，如下图所示。控制流可以是阈值、规则、机器学习模型或其他参数。
+
+## **union**
+
+在`DataStream`上使用`union`算子可以合并多个同类型的数据流，并生成同类型的数据流，即可以将多个`DataStream[T]`合并为一个新的`DataStream[T]`。数据将按照先进先出（First In First Out）的模式合并，且不去重。下图`union`对白色和深色两个数据流进行合并，生成一个数据流。
+--------------------------------------------------------------
+flink_状态
+```java
+//不推荐如果您需要对运算符执行非键控状态快照，请使用CheckpointedFunction。
+//算子状态：针对当前分区任务状态
+
+/**
+*键控状态是根据输入数据流中定义的键（key）来维护和访问的。
+*Flink 为每个键值维护一个状态实例，并将具有相同键的所有数据，
+*都分区到同一个算子任务中，这个任务会维护和处理这个 key 对应的状态。
+*当任务处理一条数据时，它会自动将状态的访问范围限定为当前数据的 key。
+*因此，具有相同 key 的所有数据都会访问相同的状态。
+*Keyed State 很类似于一个分布式的 key-value map 数据结构，
+*只能用于 KeyedStream（keyBy 算子处理之后）。
+*/
+ValueState<Object> val = null;
+ValueStateDescriptor<Integer> value = new ValueStateDescriptor<Integer>("keyState",Integer.class);
+        val = getRuntimeContext().getState(value);
+
+ListState<Object> list = null; ListStateDescriptor
+MapState
+```

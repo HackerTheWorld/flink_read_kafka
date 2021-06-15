@@ -1,0 +1,104 @@
+```java
+/**
+	* 批处理
+	*/
+DataSet<Object>//批处理数据集
+
+/**
+	* 流处理
+	*/
+//流处理运行环境
+StreamExecutionEnvironment env
+
+//设置时间定义
+env.setStreamTimeCharacteristic()
+
+//设置并行度，默认为cpu核心数
+env.setParallelism(parallelism)
+//流处理数据集
+DataStream<Object>
+//设置数据流
+DataStream<String> dataStream = env
+                .addSource(new RMQSource<String>(connectionConfig, "product", false, new SimpleStringSchema()));
+//数据流数据进行转换        
+DataStream<RabbitMqVo> flatStream = dataStream.flatMap(new RabbitFlatMap());
+//对数据流进行进行分组
+//将一条数据流分成多条按key分组数据流，并存在不同的分区        
+KeyedStream<RabbitMqVo, String> keyByStream = flatStream.keyBy(new ProductKeySelector());
+//定义窗口,按需求截取断数据
+AllWindowedStream<RabbitMqVo,TimeWindow> windowStream = keyByStream.windowAll(TumblingEventTimeWindows.of(Time.seconds(10)));
+//自定义数据整理
+//获取数据为分组的之后的流        
+SingleOutputStreamOperator<RabbitMqVo> output = windowStream.reduce(new ProductReduce());
+
+//数据流整理        
+output.addSink(new ProductSink());
+//开启数据流监听        
+try {
+     env.execute();
+} catch (Exception e) {
+     e.printStackTrace();
+}
+```
+
+-------------------------------------------------
+时间设置
+env.setStreamTimeCharacteristic
+
+1. 处理时间 TimeCharacteristic.ProcessingTime
+Processing Time(处理时间)是指执行相应操作机器的系统时间(Processing time refers to the system time of the machine that is executing the respective operation.)。
+当一个流程序以处理时间来运行时，所有基于时间的操作(如: 时间窗口)将使用运行相应算子(operator)所在机器的系统时间。例如:一个按处理时间每小时进行处理的时间窗口将包括所有的记录，其按系统时钟一小时内到达指定算子(an hourly processing time window will include all records that arrived at a specific operator between the times when the system clock indicated the full hour.)。
+处理时间是最简单的一个时间概念，不需要在数据流和机器之间进行协调。它有最好的性能和最低的延迟。然而，在分布式或者异步环境中，处理时间具有不确定性，因为容易受到记录到达系统速度的影响(例如从消息队列到达的记录)，还会受到系统内记录流在不同算子之间的流动速度的影响(speed at which records arrive in the system, and to the speed at which the records flow between operators inside the system)。
+
+2. 事件时间 TimeCharacteristic.EventTime
+Event Time(事件时间)是每个独立事件在它生产设备上产生的时间。在进入Flink之前，事件时间通常要嵌入到记录中，并且事件时间也可以从记录中提取出来。一个按事件时间每小时进行处理的时间窗口将包含所有的记录，其事件时间都在这一小时之内，不管它们何时到达，以及它们以什么顺序到达。
+事件时间即使在乱序事件，延迟事件以及从备份或持久化日志中的重复数据也能获得正确的结果。对于事件时间，时间的进度取决于数据，而不是任何时钟。**事件时间程序必须指定如何生成事件时间的Watermarks，这是表示事件时间进度的机制**。
+按事件时间处理往往会导致一定的延迟，因为它要等待延迟事件和无序事件一段时间。因此，事件时间程序通常与处理时间操作相结合使用。
+
+3. 提取时间 TimeCharacteristic.IngestionTime
+Ingestion Time是事件进入Flink的时间。在source operator中，每个记录将源的当前时间记为时间戳，基于时间的操作(如时间窗口)会使用该时间戳。
+提取时间概念上处在事件时间和处理时间之间。与处理时间相比，提取时间的成本稍微更高一些，但是可以提供更可预测的结果。因为提取时间的时间戳比较稳定(在源处只记录一次)，同一数据在流经不同窗口操作时将使用相同的时间戳，而对于处理时间，每个窗口算子可能将记录分配给不同的窗口(基于本地系统时钟以及传输延迟)。
+与事件时间相比，提取时间程序无法处理任何无序事件或延迟事件，但程序不必指定如何生成watermarks。
+在内部，提取时间与事件时间非常相似，但事件时间会自动分配时间戳以及自动生成watermark(with automatic timestamp assignment and automatic watermark generation)。
+
+```java
+//按时间划分的窗口类
+TumblingEventTimeWindows.of(Time.seconds(10))
+```
+----------------------------------------------------------
+flink_窗口
+//DataStream优先进行分组
+DataStream<String> dataStream
+KeyedStream<T, String> keyByStream = dataStream.keyBy(...)
+//分配窗口
+keyByStream.window(
+	//聚合粒度和方法
+	TumblingEventTimeWindows.of(Time.seconds(100))
+);
+//窗口函数
+/**
+全窗口函数 类似批处理只有在窗口节点最后 执行操作
+ProcessWindowFunction,WindowFunction
+*/
+/*
+增量聚合函数
+ReduceFunction 输入输出元素类型相同 
+AggregateFunction  IN:  输入元素类型 ACC: 累加器类型 OUT: 输出元素类型
+*/
+-------------------------------------------------------------
+flink_自定义窗口触发器
+//trigger
+trigger 接口有5个方法如下：
+
+    onElement()方法,每个元素被添加到窗口时调用
+　　onEventTime()方法,当一个已注册的事件时间计时器启动时调用
+　　onProcessingTime()方法,当一个已注册的处理时间计时器启动时调用
+　　onMerge()方法，与状态性触发器相关，当使用会话窗口时，两个触发器对应的窗口合并时，合并两个触发器的状态。
+　　*最后一个clear()方法执行任何需要清除的相应窗口
+
+TriggerResult返回的操作:
+
+CONTINUE:什么也不做
+FIRE:触发计算
+PURGE:清除窗口中的数据
+FIRE_AND_PURGE:触发计算并清除窗口中的数据
